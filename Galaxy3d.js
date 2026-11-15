@@ -14,31 +14,39 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. Build the 3D photo sphere
   // -----------------------------
 
-  scene.style.perspective = window.innerWidth < 700 ? "3000px" : "4000px";
+  // Photos sit on a band around the viewer (not over the poles),
+  // so every one passes in front of the camera as the galaxy turns.
+  const small = window.innerWidth < 700;
+  scene.style.perspective = small ? "1400px" : "2300px";
   world.style.transformStyle = "preserve-3d";
 
-  const radius = window.innerWidth < 700 ? 850 : 1000;
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const radius = small
+    ? Math.min(window.innerWidth * 0.62, 340)
+    : Math.min(window.innerWidth * 0.34, 500);
 
   photos.forEach((photo, index) => {
     const count = photos.length;
-
-    const y = 1 - (index / count) * 2;
-const theta = Math.acos(y);
-const phi = goldenAngle * index + (index % 2) * 0.18;
-
-    const rotateX = (theta * 180) / Math.PI;
-    const rotateY = (phi * 180) / Math.PI;
+    const phi = (index / count) * Math.PI * 2;          // even spacing around
+    const lat = [-14, 12, -4, 16, -18, 6][index % 6] * (small ? 0.8 : 1); // gentle up/down wave
 
     photo.dataset.phi = String(phi);
-    photo.dataset.theta = String(theta);
+    photo.dataset.lat = String(lat);
 
     photo.style.transform =
-  `rotateY(${rotateY}deg) rotateX(${rotateX}deg) translateZ(${radius}px) scale(0.65)`;
+      `translate(-50%, -50%) rotateY(${(phi * 180) / Math.PI}deg) rotateX(${lat}deg) translateZ(${radius}px)`;
 
     photo.style.transformStyle = "preserve-3d";
     photo.style.setProperty("--photo-index", index);
   });
+
+  // Fly-in when the page comes into view
+  const seen = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      section.classList.add("is-in");
+      seen.disconnect();
+    }
+  }, { threshold: 0.35 });
+  seen.observe(section);
 
   // -----------------------------
   // 2. Camera movement
@@ -48,7 +56,7 @@ const phi = goldenAngle * index + (index % 2) * 0.18;
   let pitch = 0;
 
   let targetYaw = 0;
-  let targetPitch = 0;
+  let targetPitch = -6;
 
   let dragging = false;
   let moved = false;
@@ -72,8 +80,7 @@ const phi = goldenAngle * index + (index % 2) * 0.18;
 
   function clearFocus() {
     focusedPhoto = null;
-    targetYaw = 0;
-    targetPitch = 0;
+    targetPitch = -6;
 
     photos.forEach(photo => {
       photo.classList.remove("is-focused");
@@ -148,11 +155,14 @@ const phi = goldenAngle * index + (index % 2) * 0.18;
       clearFocus();
       focusedPhoto = photo;
 
-      const phi = Number(photo.dataset.phi);
-      const theta = Number(photo.dataset.theta);
+      const phiDeg = (Number(photo.dataset.phi) * 180) / Math.PI;
+      const lat = Number(photo.dataset.lat);
 
-      targetYaw = -(phi * 180) / Math.PI;
-      targetPitch = (theta * 180) / Math.PI - 90;
+      // shortest turn to bring this photo to the front
+      let want = -phiDeg;
+      want += Math.round((yaw - want) / 360) * 360;
+      targetYaw = want;
+      targetPitch = -lat;
 
       photo.classList.add("is-focused");
     });
@@ -224,8 +234,7 @@ const phi = goldenAngle * index + (index % 2) * 0.18;
 
     // Slowly rotate the galaxy when untouched
     if (!reduceMotion && !dragging && !hovered && !focusedPhoto) {
-      idleRotation += 0.035;
-      targetYaw = idleRotation;
+      targetYaw += 0.09;
     }
 
     // Smooth camera movement
@@ -233,6 +242,15 @@ const phi = goldenAngle * index + (index % 2) * 0.18;
     pitch += (targetPitch - pitch) * 0.045;
 
     updateCamera();
+
+    // Depth: photos at the back are dimmer and softer
+    photos.forEach(photo => {
+      const ang = Number(photo.dataset.phi) + (yaw * Math.PI) / 180;
+      const facing = (Math.cos(ang) + 1) / 2;           // 1 = front, 0 = back
+      photo.style.setProperty("--shade", (0.35 + facing * 0.75).toFixed(3));
+      photo.style.setProperty("--fade", (0.3 + facing * 0.7).toFixed(3));
+      photo.style.zIndex = Math.round(facing * 100);
+    });
 
     // Draw twinkling stars
     ctx.clearRect(0, 0, rect.width, rect.height);

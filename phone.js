@@ -22,8 +22,10 @@ const MOM_PHOTO = "Photos/page 7/mom.png";
             dots: 1900,
             hold: 750,
             plan: [
-                { t: "Happy Birthday!" },
+                { t: "Happy Birthday" },
                 { p: 420 },
+                { t: " mere bache!" },
+                { p: 480 },
                 { t: " khoob" },
                 { p: 560 },
                 { t: " khush raho" }
@@ -35,11 +37,11 @@ const MOM_PHOTO = "Photos/page 7/mom.png";
             dots: 1400,
             hold: 650,
             plan: [
-                { t: "We all love you and wanted see you wining" },
+                { t: "We all love you and see you wining" },
                 { p: 900 },
-                { b: 3 },
+                { b: 4 },
                 { p: 500 },
-                { t: "ning and happy everyday." }
+                { t: "nning and happy everyday." }
             ]
         },
         {
@@ -48,7 +50,7 @@ const MOM_PHOTO = "Photos/page 7/mom.png";
             dots: 1700,
             hold: 850,
             plan: [
-                { t: "Humari pyari," },
+                { t: "Humari pari," },
                 { p: 460 },
                 { t: " Radha rani kripa kre," },
                 { p: 520 },
@@ -74,6 +76,15 @@ const MOM_PHOTO = "Photos/page 7/mom.png";
             ]
         }
     ];
+
+    MESSAGES.forEach(m => {
+        let s = "";
+        m.plan.forEach(step => {
+            if (step.t) s += step.t;
+            if (step.b) s = s.slice(0, -step.b);
+        });
+        if (s !== m.text) console.warn("Typing plan does not match text:", JSON.stringify(s), "vs", JSON.stringify(m.text));
+    });
 
     const page = document.getElementById("phonePage");
     if (!page) {
@@ -178,15 +189,9 @@ const MOM_PHOTO = "Photos/page 7/mom.png";
         bubble.className =
             "pp-bubble has-tail is-dots " + extra;
 
-        bubble.innerHTML = `
-            <span class="pp-dots">
-                <i></i><i></i><i></i>
-            </span>
-            <span class="pp-text">
-                <span class="pp-chars"></span>
-                <i class="pp-caret"></i>
-            </span>
-        `;
+        bubble.innerHTML =
+            '<span class="pp-dots"><i></i><i></i><i></i></span>' +
+            '<span class="pp-text"><span class="pp-chars"></span><i class="pp-caret"></i></span>';
 
         if (lastBubble) {
             lastBubble.classList.remove("has-tail");
