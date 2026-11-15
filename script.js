@@ -444,24 +444,42 @@ if (memoriesSection && memoryRibbon) {
 
         if (!width || !height) return;
 
-        const x = value => (value / width) * 1000;
-        const y = value => (value / height) * 700;
+        // Work in real pixels so photos are spaced evenly on any screen shape
+        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        const x = value => value;
+        const y = value => value;
+
+        // Phones: a tall loop under the heading, using the full width
+        if (width < 700) {
+            const mobilePath = [
+                `M ${x(width * 0.50)} ${y(height * 0.304)}`,
+                `C ${x(width * 0.75)} ${y(height * 0.270)}, ${x(width * 0.92)} ${y(height * 0.354)}, ${x(width * 0.86)} ${y(height * 0.488)}`,
+                `C ${x(width * 0.80)} ${y(height * 0.606)}, ${x(width * 0.92)} ${y(height * 0.724)}, ${x(width * 0.72)} ${y(height * 0.808)}`,
+                `C ${x(width * 0.55)} ${y(height * 0.866)}, ${x(width * 0.30)} ${y(height * 0.850)}, ${x(width * 0.18)} ${y(height * 0.757)}`,
+                `C ${x(width * 0.06)} ${y(height * 0.656)}, ${x(width * 0.20)} ${y(height * 0.556)}, ${x(width * 0.14)} ${y(height * 0.446)}`,
+                `C ${x(width * 0.08)} ${y(height * 0.337)}, ${x(width * 0.28)} ${y(height * 0.312)}, ${x(width * 0.50)} ${y(height * 0.304)}`,
+                "Z"
+            ].join(" ");
+            ropePath.setAttribute("d", mobilePath);
+            pathLength = ropePath.getTotalLength();
+            return;
+        }
 
         const path = [
 
-            `M ${x(width * 0.43)} ${y(height * 0.34)}`,
+            `M ${x(width * 0.473)} ${y(height * 0.34)}`,
 
-            `C ${x(width * 0.45)} ${y(height * 0.13)}, ${x(width * 0.58)} ${y(height * 0.07)}, ${x(width * 0.70)} ${y(height * 0.17)}`,
+            `C ${x(width * 0.487)} ${y(height * 0.13)}, ${x(width * 0.587)} ${y(height * 0.07)}, ${x(width * 0.678)} ${y(height * 0.17)}`,
 
-            `C ${x(width * 0.82)} ${y(height * 0.27)}, ${x(width * 0.91)} ${y(height * 0.07)}, ${x(width * 0.99)} ${y(height * 0.20)}`,
+            `C ${x(width * 0.769)} ${y(height * 0.27)}, ${x(width * 0.838)} ${y(height * 0.07)}, ${x(width * 0.899)} ${y(height * 0.20)}`,
 
-            `C ${x(width * 1.08)} ${y(height * 0.34)}, ${x(width * 1.02)} ${y(height * 0.56)}, ${x(width * 0.91)} ${y(height * 0.67)}`,
+            `C ${x(width * 0.968)} ${y(height * 0.34)}, ${x(width * 0.922)} ${y(height * 0.56)}, ${x(width * 0.838)} ${y(height * 0.67)}`,
 
-            `C ${x(width * 0.79)} ${y(height * 0.80)}, ${x(width * 0.66)} ${y(height * 0.67)}, ${x(width * 0.58)} ${y(height * 0.78)}`,
+            `C ${x(width * 0.747)} ${y(height * 0.80)}, ${x(width * 0.647)} ${y(height * 0.67)}, ${x(width * 0.587)} ${y(height * 0.78)}`,
 
-            `C ${x(width * 0.49)} ${y(height * 0.91)}, ${x(width * 0.36)} ${y(height * 0.78)}, ${x(width * 0.37)} ${y(height * 0.61)}`,
+            `C ${x(width * 0.518)} ${y(height * 0.91)}, ${x(width * 0.419)} ${y(height * 0.78)}, ${x(width * 0.426)} ${y(height * 0.61)}`,
 
-            `C ${x(width * 0.37)} ${y(height * 0.49)}, ${x(width * 0.41)} ${y(height * 0.40)}, ${x(width * 0.43)} ${y(height * 0.34)}`,
+            `C ${x(width * 0.426)} ${y(height * 0.49)}, ${x(width * 0.457)} ${y(height * 0.40)}, ${x(width * 0.473)} ${y(height * 0.34)}`,
 
             "Z"
 
@@ -506,11 +524,8 @@ if (memoriesSection && memoryRibbon) {
                 nextPoint.x - point.x
             ) * (180 / Math.PI);
 
-            const screenX =
-                (point.x / 1000) * memoriesSection.clientWidth;
-
-            const screenY =
-                (point.y / 700) * memoriesSection.clientHeight;
+            const screenX = point.x;
+            const screenY = point.y;
 
             const gentleTilt =
                 Math.sin(index * 1.7) * 4;
